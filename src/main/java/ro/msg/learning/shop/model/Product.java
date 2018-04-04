@@ -3,6 +3,7 @@ package ro.msg.learning.shop.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 
 /**
  * Created by marino on 04.04.2018.
@@ -15,8 +16,8 @@ public class Product {
     private Integer id;
     private String name;
     private String description;
-    private String price;
-    private String weight;
+    private BigDecimal price;
+    private Double weight;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_category_id")
     private ProductCategory category;
