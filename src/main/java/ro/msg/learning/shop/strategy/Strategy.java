@@ -2,6 +2,7 @@ package ro.msg.learning.shop.strategy;
 
 import ro.msg.learning.shop.model.Location;
 import ro.msg.learning.shop.model.Product;
+import ro.msg.learning.shop.model.ProductsRequest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,5 +12,5 @@ import java.util.List;
  */
 public interface Strategy {
 
-    public List<Location> getProductLocation(List<Product> products);
+    public Location getProductLocation(List<ProductsRequest> products);
 }

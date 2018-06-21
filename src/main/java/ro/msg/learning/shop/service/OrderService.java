@@ -2,46 +2,44 @@ package ro.msg.learning.shop.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ro.msg.learning.shop.model.Order;
+import ro.msg.learning.shop.model.*;
 import ro.msg.learning.shop.repository.OrderRepository;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import ro.msg.learning.shop.repository.StockRepository;
+import ro.msg.learning.shop.strategy.Strategy;
 
 /**
  * Created by marino on 05.04.2018.
  */
 
-/**Handles the creation of orders*/
+/**
+ * Handles the creation of orders
+ */
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final StockRepository stockRepository;
+
+    private final Strategy strategy;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository){
-        this.orderRepository=orderRepository;
+    public OrderService(OrderRepository orderRepository, StockRepository stockRepository, Strategy strategy) {
+        this.orderRepository = orderRepository;
+        this.stockRepository = stockRepository;
+        this.strategy = strategy;
     }
 
-    /*Create a service (annotated with @Service) class that handles the creation of orders.
-    The following constraints apply:
-    You get a single java object as input. This object will contain the order timestamp, the delivery address and a list of products (product ID and quantity) contained in the order.
-    You return an Order entity if the operation was successful. If not, you throw an exception.
-    The service has to select a strategy for finding from which locations should the products be taken. See the strategy design pattern. The strategy should be selected based on a spring boot configuration. The following initial strategyshould be created:oSingle location: find a single location that has all the required products (with the required quantities) in stock.If there are more such locations, simply take the first one based on the ID.The service then runsthe strategy, obtaining a list of objectswith the following structure: location, product, quantity (= how many items of the given product are taken from the given location). If the strategy is unable to find a suitable set of locations, it should throw an exception
-    .The stocks need to be updated by subtracting the shipped goods*/
-    class OrderRequest{
-        LocalDateTime orderTimeStamp;
-        String deliveryAddress;
-        List<ProductRequest> products;
-    }
-    class ProductRequest{
-        long id;
-        BigDecimal quantity;
-    }
-    public Order createOrder(OrderRequest orderRequest){
-        if("y"=="x")
-        return null;
-        throw new RuntimeException();
+    public Order createOrder(OrderRequest orderRequest) {
+        Location location = strategy.getProductLocation(orderRequest.getProducts());
+        orderRequest.getProducts().stream().forEach(product -> {
+            Stock stock  = stockRepository.readStockByProductIdAndLocationId(product.getId(), location.getId());
+            stock.setQuantity(stock.getQuantity()-product.getQuantity());
+            stockRepository.save(stock);
+        });
+        Order order =new Order();
+        order.setAddress(orderRequest.getDeliveryAddress());
+        order.setCustomer(orderRequest.getCustomer());
+        order.setShippedFrom(location);
+        return orderRepository.save(order);
     }
 
 }
